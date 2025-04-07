@@ -1,24 +1,28 @@
 package secretdb
 
 import (
-	"github.com/mikerybka/util"
+	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/mikerybka/constants"
 )
 
-func NewClient(host, user, pass string) *Client {
-	return &Client{
-		Host:     host,
-		Username: user,
-		Password: pass,
-	}
+func NewClient() *Client {
+	return &Client{}
 }
 
 type Client struct {
-	Host     string
-	Username string
-	Password string
 }
 
 func (c *Client) Email() (string, error) {
-	path := "data/secrets/email"
-	return util.ReadRemoteFile(c.Username, c.Password, c.Host, 22, path)
+	res, err := http.Get(fmt.Sprintf("http://%s:2222/secrets/email", constants.BackendIP))
+	if err != nil {
+		return "", err
+	}
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
